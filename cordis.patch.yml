@@ -1,0 +1,16 @@
+# dsh-werewolf bundle patch：把宿主插件行插入 profile 花名册。
+# 用法一（本地直接挂载，推荐）：把下面这段 insert 复制到
+#   <DSH_HOME>/profiles/<profile>/cordis.patch.yml 末尾，并把 name 改成
+#   绝对 file:// URL（Windows 必须用 file:///，Node 的 ESM loader 不接受
+#   裸盘符路径），例如：
+#       name: 'file:///E:/path/to/dsh-werewolf/lib/index.js'
+# 用法二（作为 bundle 安装）：把本包 link 进 profile 后，
+#   profile 的 package.json 里加入 "dsh-werewolf": "link:<绝对路径>"
+#   并把它加进 dsh.profile.bundles，再用 `dsh plugin --profile <name> install`。
+- insert:
+    - id: werewolf
+      name: 'dsh-werewolf'
+      config:
+        seats: 12
+        godView: true
+        turnTimeoutMs: 300000

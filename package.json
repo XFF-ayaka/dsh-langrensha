@@ -1,0 +1,64 @@
+{
+  "name": "dsh-werewolf",
+  "version": "1.1.0",
+  "description": "DeepSeek Harness 的狼人杀模式：AI 自动分裂为 1 位裁判 + N 位玩家（真实子智能体），随机发牌、自主推进整局狼人杀（含警长竞选），发言实时输出到对话，并可导出 Markdown 对局记录。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./report": "./lib/report.js",
+    "./rules": "./lib/rules.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node test/dry-run.mjs",
+    "test:12": "node test/dry-run.mjs 12 20",
+    "sample": "node test/dry-run.mjs 12 1 --write"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "plugin",
+    "werewolf",
+    "mafia",
+    "langrensha",
+    "狼人杀",
+    "multi-agent",
+    "agent-preset"
+  ],
+  "files": [
+    "lib",
+    "tools",
+    "test",
+    "examples/sample-report.md",
+    "cordis.patch.yml",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "author": "Floyd",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XFF-ayaka/dsh-werewolf.git"
+  },
+  "homepage": "https://github.com/XFF-ayaka/dsh-werewolf#readme",
+  "bugs": {
+    "url": "https://github.com/XFF-ayaka/dsh-werewolf/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
