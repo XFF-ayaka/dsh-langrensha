@@ -56,15 +56,42 @@ DSH 的「模式」= **Agent Preset**。本仓库包含两部分：
 
 ## 2. 安装
 
-插件 = 一个 npm 包形状的 bundle + 一行 profile 补丁。零运行时依赖（只用 `node:` 内置模块）。
+插件 = 一个 npm 包形状的 bundle + 一行 profile 补丁。零运行时依赖（只用 `node:` 内置模块），
+**拷到任何一台装了 DSH 的机器都能跑**（Windows / macOS / Linux）。
 
-### 方式 A：本地挂载（推荐，零依赖）
+### 方式 0：一条命令（推荐，跨平台）
 
-1. 把本目录放到任意位置，例如 `<你的目录>\dsh-werewolf`。
+把仓库下载/克隆到任意目录，然后：
+
+```bash
+node tools/install.mjs --preset          # 装插件 + 「狼人杀模式」，默认 profile = desktop
+node tools/install.mjs --profile web     # 指定 profile
+node tools/install.mjs --dsh-home /path/to/dsh-home   # 指定 DSH 主目录（默认 $DSH_HOME 或 ~/.dsh）
+node tools/install.mjs --dry-run         # 只打印将要做的改动
+node tools/install.mjs --bump            # 升级：同步代码并把缓存版本 ?v=N 加一
+```
+
+它会自动完成三件事，**不用手改任何 YAML**：
+
+1. 把 `lib/ tools/ test/ examples/` 等复制到 `<profile>/plugins/dsh-werewolf/`
+   （必须放进 profile：DSH 的 HMR 只监听 profile 目录内的模块）；
+2. 往 `<profile>/cordis.patch.yml` 写入插件行，模块 URL **按平台自动生成**
+   —— Windows 用 `file:///C:/…`（Node 的 ESM loader 不接受裸盘符路径），macOS/Linux 用绝对路径；
+3. 加 `--preset` 时顺便装「狼人杀模式」Agent Preset。
+
+幂等：重复执行不会重复插入；升级用 `--bump`（改完记得在插件管理器里把
+`include:werewolf` 停用再启用一次——DSH 的 ESM 模块按 URL 缓存，只有换 URL 才会换新代码）。
+
+装完：重启 DSH（或触碰一次 `cordis.patch.yml` 触发热重载）→ 用 `/werewolf` 开局；
+模式要刷新浏览器（F5）才会出现在「设置 → Agent 预设 → 自定义」。
+
+### 方式 A：手动挂载（不想跑脚本时）
+
+1. 把本目录放到任意位置，例如 `<你的目录>/dsh-werewolf`。
 2. **把插件复制进 profile**（重要：HMR 只监听 profile 目录内的模块，放外面改了不会热重载）：
 
    ```powershell
-   .\sync.ps1          # 默认同步到 %USERPROFILE%\.dsh\profiles\desktop\plugins\dsh-werewolf
+   .\sync.ps1          # Windows 专用；其他平台手动复制 lib/ tools/ test/ 到 <profile>\plugins\dsh-werewolf\
    ```
 
 3. 在 `<DSH_HOME>\profiles\desktop\cordis.patch.yml` 末尾追加：
@@ -91,20 +118,34 @@ DSH 的「模式」= **Agent Preset**。本仓库包含两部分：
    plugin_manager set_plugin target=include:werewolf enabled=true
    ```
 
-### 方式 B：作为 profile bundle 安装
+### 方式 B：作为 profile bundle 安装（发布到 npm / GitHub 之后）
 
-把本包 link 进 profile，写进 profile 的 `package.json`：
+发布后（见 [PUBLISH.md](PUBLISH.md)），别人可以走 DSH 自带的包管理路径：
+
+```bash
+# 命令行（dsh CLI 可用时）
+dsh plugin --profile desktop add dsh-werewolf                      # 从 npm
+dsh plugin --profile desktop add github:XFF-ayaka/dsh-werewolf     # 从 GitHub（需要该机装了 git）
+dsh plugin --profile desktop add /path/to/dsh-werewolf             # 从本地目录
+
+# 或者干脆用 GUI：设置 → 插件 → 安装，填入 dsh-werewolf 或 github:XFF-ayaka/dsh-werewolf
+```
+
+包内的 `cordis.patch.yml`（`dsh.bundle.patch`）会自动插入插件行，不需要手动改 YAML。
+本地目录/离线安装等价写法是把它写进 profile 的 `package.json`：
 
 ```json
 {
-  "dependencies": { "dsh-werewolf": "link:<你的目录>\\dsh-werewolf" },
+  "dependencies": { "dsh-werewolf": "link:<你的目录>/dsh-werewolf" },
   "dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-werewolf"] } }
 }
 ```
 
 然后在 profile 目录执行 pnpm install（DSH 自带 pnpm：
-`node <DSH 安装目录>\resources\runtime\pnpm\dist\pnpm.mjs install`）。
-包内的 `cordis.patch.yml`（`dsh.bundle.patch`）会自动插入插件行。
+`node <DSH 安装目录>/resources/runtime/pnpm/dist/pnpm.mjs install`）。
+
+> ⚠️ `github:` 安装需要目标机器装了 git（`git ls-remote` 会被 pnpm 调用）；
+> 没有任何构建脚本，所以不需要 `allowBuilds`。
 
 ### 方式 C：安装「狼人杀模式」（Agent Preset）
 
@@ -238,6 +279,7 @@ lib/report.js       Markdown 报告生成器（纯函数，可脱离 DSH 单测�
 tools/preset-werewolf.yml  「狼人杀模式」Agent Preset 声明（由官方 standard preset 生成）
 tools/build-preset.mjs     从官方 standard.patch.yml 重新生成上面的声明
 tools/apply-preset.mjs     把该声明幂等安装进 / 卸载出 profile 补丁
+tools/install.mjs          一条命令装到任意 DSH profile（跨平台、幂等，--bump 升级）
 tools/set-identity.mjs     fork 后一键改署名（package.json / LICENSE / README badge）
 test/dry-run.mjs    离线自测：脚本化 ask/emit 跑完整局 + Markdown 落盘校验，0 次 LLM 请求
 examples/sample-report.md  真实对局导出的 Markdown 样例（也可 npm run sample 离线重生成）
@@ -300,13 +342,30 @@ node test/dry-run.mjs 12 20    # 12 人标准局跑 20 局
   `surfaceOp` 对消息类事件是必填的。插件自己写 assistant 消息在**没有加载
   `dsh-session/invariant`** 的组合里是合法的（本机 desktop profile 未加载它）。
 
-## 7. 已知限制
+## 7. 已知限制与兼容性
 
 - 人越多越慢：警长竞选 + 每轮发言都是一次子智能体运行。6 人局一局约 3~5 分钟，12 人局 10~20 分钟。
 - 警长竞选默认 9 人及以上才开；6/8 人局可用 `sheriff: true` 强制开启（但小局上警意义不大）。
 - 警徽流（预言家约定的警徽移交顺序）由玩家 AI 自行在发言里约定，引擎只负责「谁持有警徽」。
 - 玩家 AI 的推理质量取决于所用模型；默认用 `reasoningEffort: low` 换速度。
 - 发言是「一轮一个 AI」，不做跨轮长期记忆（由提示词里的完整公开发言补偿）。
+
+**可移植性**
+
+| 项目 | 情况 |
+| --- | --- |
+| 运行时依赖 | **零**（只用 `node:` 内置模块），不需要 `npm install` |
+| 平台 | Windows / macOS / Linux 均可；差异只在安装：`tools/install.mjs` 跨平台，`sync.ps1` 仅 Windows |
+| Node | `^22.19.0 || >=24.0.0`（与 DSH 要求一致） |
+| DSH 版本 | 在 **0.2.0-rc.2** 上开发并实测。插件本体用的是稳定 API（`tools` / `systemPrompt` / `subagents` / `commands` / `agents`） |
+
+**唯一的版本敏感点是「狼人杀模式」preset**：`tools/preset-werewolf.yml` 的插件列表是从
+0.2.0-rc.2 的官方 `standard` preset 复制来的。DSH 大版本升级后若个别模块改名，
+该模式会显示「加载失败」（**插件本体不受影响，照样能开一局**）。此时可以：
+
+1. 从新版 DSH 的 `resources/app.asar` 中取出 `dsh/node_modules/@deepseek-ai/dsh-web-app/presets/standard.patch.yml`；
+2. `node tools/build-preset.mjs <取出的 standard.patch.yml> tools/preset-werewolf.yml` 重新生成；
+3. `node tools/install.mjs --preset`（先 `node tools/apply-preset.mjs --remove` 移除旧的）。
 
 ## 8. 贡献与发布
 

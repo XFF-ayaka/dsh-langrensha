@@ -2,8 +2,9 @@
  * 把「狼人杀模式」preset 安装进 DSH profile（幂等）。
  *
  *   node tools/apply-preset.mjs                       # 默认安装到 desktop profile
- *   node tools/apply-preset.mjs web                   # 指定 profile
- *   node tools/apply-preset.mjs desktop --remove      # 卸载（移除该 preset 段）
+ *   node tools/apply-preset.mjs --profile web         # 指定 profile
+ *   node tools/apply-preset.mjs --dsh-home D:\dshhome # 指定 DSH 主目录
+ *   node tools/apply-preset.mjs --remove              # 卸载（移除该 preset 段）
  *
  * 原理：DSH 的「模式」= Agent Preset = profile 补丁里的一行
  * `@deepseek-ai/dsh-agent-preset`，其 config.plugins 描述该模式的能力组合。
@@ -19,12 +20,18 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const args = process.argv.slice(2)
 const remove = args.includes('--remove')
-const profile = args.find((value) => !value.startsWith('--')) ?? 'desktop'
-const dshHome = process.env.DSH_HOME ?? join(homedir(), '.dsh')
+/** 读取 `--key value` 形式的参数。 */
+function arg(key) {
+  const index = args.indexOf(`--${key}`)
+  return index >= 0 ? args[index + 1] : undefined
+}
+const positional = args.filter((value, index) => !value.startsWith('--') && !args[index - 1]?.startsWith('--'))
+const profile = arg('profile') ?? positional[0] ?? 'desktop'
+const dshHome = arg('dsh-home') ?? process.env.DSH_HOME ?? join(homedir(), '.dsh')
 const patchPath = join(dshHome, 'profiles', profile, 'cordis.patch.yml')
 const snippetPath = join(here, 'preset-werewolf.yml')
 
-if (!existsSync(patchPath)) throw new Error(`profile 补丁不存在：${patchPath}`)
+if (!existsSync(patchPath)) throw new Error(`profile 补丁不存在：${patchPath}（用 --profile / --dsh-home 指定）`)
 if (!existsSync(snippetPath)) throw new Error(`preset 片段不存在：${snippetPath}`)
 
 const snippet = readFileSync(snippetPath, 'utf8').replace(/\s+$/, '')

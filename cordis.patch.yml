@@ -1,16 +1,24 @@
 # dsh-werewolf bundle patch：把宿主插件行插入 profile 花名册。
-# 用法一（本地直接挂载，推荐）：把下面这段 insert 复制到
-#   <DSH_HOME>/profiles/<profile>/cordis.patch.yml 末尾，并把 name 改成
-#   绝对 file:// URL（Windows 必须用 file:///，Node 的 ESM loader 不接受
-#   裸盘符路径），例如：
-#       name: 'file:///E:/path/to/dsh-werewolf/lib/index.js'
-# 用法二（作为 bundle 安装）：把本包 link 进 profile 后，
-#   profile 的 package.json 里加入 "dsh-werewolf": "link:<绝对路径>"
-#   并把它加进 dsh.profile.bundles，再用 `dsh plugin --profile <name> install`。
+#
+# 【推荐】不用手改本文件：在解压出来的目录里执行
+#     node tools/install.mjs --profile desktop
+# 它会把插件复制进 profile、并自动往 <profile>/cordis.patch.yml 写入正确的
+# 模块 URL（Windows 自动转成 file:///C:/… 形式）与配置；再加 --preset 还会
+# 一并装「狼人杀模式」Agent Preset。# 里带 ?v=N 是给升级用的缓存版本号。
+#
+# 手动安装时把下面这段 insert 粘到 <DSH_HOME>/profiles/<profile>/cordis.patch.yml
+# 末尾，并把 name 改成插件 index.js 的绝对路径：
+#   Windows：必须写成 file:/// 形式（Node 的 ESM loader 不接受裸盘符路径），
+#            例如 name: 'file:///E:/path/to/dsh-werewolf/lib/index.js'
+#   macOS / Linux：直接写绝对路径 /home/you/dsh-werewolf/lib/index.js 即可。
 - insert:
     - id: werewolf
       name: 'dsh-werewolf'
       config:
         seats: 12
         godView: true
-        turnTimeoutMs: 300000
+        sheriff: auto
+        reasoningEffort: low
+        turnTimeoutMs: 120000
+        autoExport: true
+        exportDir: werewolf-logs

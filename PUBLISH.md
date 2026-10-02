@@ -27,7 +27,7 @@ Select-String -Path (Get-ChildItem -Recurse -File | Where-Object FullName -notma
 1. GitHub 新建**空仓库** `dsh-werewolf`（不要勾 Add README / .gitignore / license）。
 2. 仓库页 → **Add file → Upload files**。
 3. 打开本目录，**Ctrl+A 全选里面的内容**（不是拖本目录本身），拖进上传框。
-4. 确认 **21 个文件**、目录层级完整（`lib/`、`tools/`、`test/`、`examples/`、`.github/workflows/`）。
+4. 确认 **22 个文件**、目录层级完整（`lib/`、`tools/`、`test/`、`examples/`、`.github/workflows/`）。
 5. Commit message 建议：`feat: DSH 狼人杀模式 v1.1.0（警长竞选 + Markdown 导出 + Agent 预设）`。
 
 > ⚠️ 拖本目录本身会多套一层；`.github/workflows/ci.yml` 是唯一一个藏在带点目录里的文件，漏了 CI 就不会跑。
@@ -73,7 +73,7 @@ npm publish --access public     # package.json 里 publishConfig.access 已是 p
 - [x] `node -e "import('./lib/index.js').then(m=>console.log(m.name, m.inject))"` 不报错
 - [x] 署名已写入：`XFF-ayaka` / `Floyd`（`node tools/set-identity.mjs` 可重跑）
 - [x] 没有 `C:\Users\...` / `E:\...` 之类的本机路径
-- [x] 只提交 21 个源文件（无 `node_modules`、无 `.dsh` profile、无导出的对局记录）
+- [x] 只提交 22 个源文件（无 `node_modules`、无 `.dsh` profile、无导出的对局记录）
 - [ ] 上传后到 **Actions** 标签页确认 CI 跑起来了
 - [ ] 在仓库 **About → Topics** 填关键词
 - [ ] （可选）录一段演示 GIF 放进 `docs/`，并在 README 里引用
